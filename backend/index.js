@@ -31,7 +31,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// Session middleware for simple authentication - updated for Vercel compatibility
+// Session middleware for simple authentication
 app.use(session({
   secret: process.env.SESSION_SECRET || 'omori-mood-logger-secret',
   resave: false,
@@ -39,14 +39,13 @@ app.use(session({
   cookie: { 
     secure: process.env.NODE_ENV === 'production', 
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
 
 // Root route
 app.get("/", (req, res) => {  
-  res.json({ message: "Mood Logger API is running..." });
+  res.send("Mood Logger API is running...");
 });
 
 // Health check route
@@ -80,7 +79,7 @@ app.use('/api/moods', moodRoutes);
 app.use('/api/mood-logs', moodLogRoutes);
 app.use('/api/favorites', favoriteRoutes);
 
-// Global error handler - updated to always return JSON
+// Global error handler
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({
