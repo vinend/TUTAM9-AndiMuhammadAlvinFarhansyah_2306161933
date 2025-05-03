@@ -1,5 +1,5 @@
 // API URL for backend services
-export const API_URL = 'tutam-9-andi-muhammad-alvin-farhansyah-2306161933-7t99r8393.vercel.app';
+export const API_URL = 'tutam-9-andi-muhammad-alvin-farhansyah-2306161933-dcfl.vercel.app';
 
 // Set this to false to use actual database data
 export const DEMO_MODE = false;
