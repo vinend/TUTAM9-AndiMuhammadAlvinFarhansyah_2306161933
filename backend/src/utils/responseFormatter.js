@@ -1,39 +1,44 @@
 /**
- * Utility to format consistent API responses
+ * Standardized API response formatter
+ * Ensures all API responses follow a consistent format
  */
-class ResponseFormatter {
+const responseFormatter = {
   /**
    * Format a successful response
    * @param {Object} res - Express response object
-   * @param {Object|Array} data - Response data
-   * @param {number} statusCode - HTTP status code (default: 200)
+   * @param {String} message - Success message
+   * @param {Object} data - Optional data payload
+   * @param {Number} statusCode - HTTP status code (default: 200)
    */
-  success(res, data = {}, statusCode = 200) {
+  success: (res, message, data = null, statusCode = 200) => {
+    // Set content type explicitly to ensure JSON
+    res.setHeader('Content-Type', 'application/json');
+    
     return res.status(statusCode).json({
       success: true,
-      ...data
+      message,
+      payload: data
     });
-  }
+  },
 
   /**
    * Format an error response
    * @param {Object} res - Express response object
-   * @param {string} message - Error message
-   * @param {number} statusCode - HTTP status code (default: 500)
-   * @param {Object} errors - Additional error details
+   * @param {String} message - Error message
+   * @param {Number} statusCode - HTTP status code (default: 400)
+   * @param {Object} errors - Optional detailed error information
    */
-  error(res, message = 'Internal server error', statusCode = 500, errors = null) {
-    const response = {
+  error: (res, message, statusCode = 400, errors = null) => {
+    // Set content type explicitly to ensure JSON
+    res.setHeader('Content-Type', 'application/json');
+    
+    return res.status(statusCode).json({
       success: false,
-      message
-    };
-
-    if (errors) {
-      response.errors = errors;
-    }
-
-    return res.status(statusCode).json(response);
+      message,
+      payload: null,
+      ...(errors && { errors })
+    });
   }
-}
+};
 
-module.exports = new ResponseFormatter();
+module.exports = responseFormatter;
