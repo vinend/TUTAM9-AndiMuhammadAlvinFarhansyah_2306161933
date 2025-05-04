@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { API_URL } from '../constants';
 import { useSearchParams } from 'react-router-dom';
 import { FaStar, FaRegStar, FaEdit, FaTrash } from 'react-icons/fa';
+import api from '../api/axiosConfig';
 
 const MoodLogPage = () => {
   const [searchParams] = useSearchParams();
@@ -23,22 +23,12 @@ const MoodLogPage = () => {
       setLoading(true);
       try {
         // Fetch available moods
-        const moodsResponse = await fetch(`${API_URL}/api/moods`, {
-          credentials: 'include',
-        });
-        
-        if (!moodsResponse.ok) throw new Error('Failed to fetch moods');
-        const moodsData = await moodsResponse.json();
-        setMoods(moodsData.moods);
+        const moodsResponse = await api.get('/api/moods');
+        setMoods(moodsResponse.data.moods);
         
         // Fetch user's mood logs
-        const logsResponse = await fetch(`${API_URL}/api/mood-logs?limit=50`, {
-          credentials: 'include',
-        });
-        
-        if (!logsResponse.ok) throw new Error('Failed to fetch mood logs');
-        const logsData = await logsResponse.json();
-        setMoodLogs(logsData.moodLogs);
+        const logsResponse = await api.get('/api/mood-logs?limit=50');
+        setMoodLogs(logsResponse.data.moodLogs);
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load data. Please try again later.');
@@ -63,32 +53,18 @@ const MoodLogPage = () => {
     setError('');
     
     try {
-      const response = await fetch(`${API_URL}/api/mood-logs`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          moodId: selectedMoodId,
-          note: note.trim() || null,
-        }),
+      const response = await api.post('/api/mood-logs', {
+        moodId: selectedMoodId,
+        note: note.trim() || null,
       });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to log mood');
-      }
-      
-      const data = await response.json();
-      
       // Add new log to state and reset form
-      setMoodLogs(prevLogs => [data.moodLog, ...prevLogs]);
+      setMoodLogs(prevLogs => [response.data.moodLog, ...prevLogs]);
       setSelectedMoodId('');
       setNote('');
       
     } catch (err) {
-      setError(err.message || 'An error occurred. Please try again.');
+      setError(err.response?.data?.message || 'An error occurred. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -98,19 +74,9 @@ const MoodLogPage = () => {
   const toggleFavorite = async (moodLogId, isFavorite) => {
     try {
       if (isFavorite) {
-        await fetch(`${API_URL}/api/favorites/${moodLogId}`, {
-          method: 'DELETE',
-          credentials: 'include',
-        });
+        await api.delete(`/api/favorites/${moodLogId}`);
       } else {
-        await fetch(`${API_URL}/api/favorites`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ moodLogId }),
-        });
+        await api.post('/api/favorites', { moodLogId });
       }
 
       // Update UI optimistically
@@ -134,21 +100,13 @@ const MoodLogPage = () => {
     }
     
     try {
-      const response = await fetch(`${API_URL}/api/mood-logs/${logId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete mood log');
-      }
+      await api.delete(`/api/mood-logs/${logId}`);
       
       // Remove log from state
       setMoodLogs(prevLogs => prevLogs.filter(log => log.id !== logId));
     } catch (err) {
       console.error('Error deleting log:', err);
-      setError(err.message || 'Failed to delete mood log');
+      setError(err.response?.data?.message || 'Failed to delete mood log');
     }
   };
 
@@ -169,30 +127,16 @@ const MoodLogPage = () => {
   // Save edited log
   const saveEdit = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/mood-logs/${editingLogId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          moodId: selectedMoodId,
-          note: editNote.trim() || null,
-        }),
+      const response = await api.put(`/api/mood-logs/${editingLogId}`, {
+        moodId: selectedMoodId,
+        note: editNote.trim() || null,
       });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update mood log');
-      }
-      
-      const data = await response.json();
       
       // Update log in state
       setMoodLogs(prevLogs => 
         prevLogs.map(log => 
           log.id === editingLogId 
-            ? data.moodLog
+            ? response.data.moodLog
             : log
         )
       );
@@ -201,7 +145,7 @@ const MoodLogPage = () => {
       cancelEditing();
     } catch (err) {
       console.error('Error updating log:', err);
-      setError(err.message || 'Failed to update mood log');
+      setError(err.response?.data?.message || 'Failed to update mood log');
     }
   };
 

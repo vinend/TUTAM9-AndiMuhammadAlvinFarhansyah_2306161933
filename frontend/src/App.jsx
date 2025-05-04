@@ -15,8 +15,8 @@ import Navbar from './components/Navbar';
 import AudioPlayer from './components/AudioPlayer';
 import LoadingScreen from './components/LoadingScreen';
 
-// Constants
-import { API_URL } from './constants';
+// API
+import api from './api/axiosConfig';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -38,21 +38,20 @@ function App() {
     // Check if user is logged in
     const checkAuthStatus = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/auth/profile`, {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data.user);
+        const response = await api.get('/api/auth/profile');
+        if (response.data && response.data.user) {
+          setUser(response.data.user);
           setIsAuthenticated(true);
+        } else {
+          // If there's a response but no user data
+          setUser(null);
+          setIsAuthenticated(false);
         }
       } catch (error) {
         console.error('Authentication check failed:', error);
+        // Explicitly set authentication state to false on error
+        setUser(null);
+        setIsAuthenticated(false);
       } finally {
         // Display loading screen for at least 1 second for immersion
         setTimeout(() => {
@@ -71,10 +70,7 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      await fetch(`${API_URL}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await api.post('/api/auth/logout');
       setUser(null);
       setIsAuthenticated(false);
     } catch (error) {

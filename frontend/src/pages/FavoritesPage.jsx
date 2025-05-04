@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { API_URL } from '../constants';
 import { FaStar, FaTrash } from 'react-icons/fa';
+import api from '../api/axiosConfig';
 
 const FavoritesPage = () => {
   const [favorites, setFavorites] = useState([]);
@@ -11,14 +11,8 @@ const FavoritesPage = () => {
     const fetchFavorites = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`${API_URL}/api/favorites`, {
-          credentials: 'include',
-        });
-        
-        if (!response.ok) throw new Error('Failed to fetch favorites');
-        
-        const data = await response.json();
-        setFavorites(data.favorites);
+        const response = await api.get('/api/favorites');
+        setFavorites(response.data.favorites);
       } catch (err) {
         console.error('Error fetching favorites:', err);
         setError('Failed to load favorites. Please try again later.');
@@ -32,12 +26,7 @@ const FavoritesPage = () => {
 
   const removeFavorite = async (moodLogId) => {
     try {
-      const response = await fetch(`${API_URL}/api/favorites/${moodLogId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-      });
-      
-      if (!response.ok) throw new Error('Failed to remove from favorites');
+      await api.delete(`/api/favorites/${moodLogId}`);
       
       // Remove from state immediately (optimistic UI update)
       setFavorites(prevFavorites => prevFavorites.filter(fav => fav.id !== moodLogId));

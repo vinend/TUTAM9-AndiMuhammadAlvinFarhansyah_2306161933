@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { API_URL } from '../constants';
+import api from '../api/axiosConfig';
 
 const LoginPage = ({ onLogin }) => {
   const [email, setEmail] = useState('');
@@ -20,24 +20,10 @@ const LoginPage = ({ onLogin }) => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
-
-      onLogin(data.user);
+      const response = await api.post('/api/auth/login', { email, password });
+      onLogin(response.data.user);
     } catch (err) {
-      setError(err.message || 'An error occurred during login');
+      setError(err.response?.data?.message || 'An error occurred during login');
     } finally {
       setLoading(false);
     }

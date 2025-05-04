@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { API_URL } from '../constants';
+import api from '../api/axiosConfig';
 
 const StatsPage = () => {
   const [stats, setStats] = useState([]);
@@ -32,24 +32,18 @@ const StatsPage = () => {
           startDate.toISOString().split('T')[0] : null;
           
         // Fetch mood stats
-        const statsResponse = await fetch(
-          `${API_URL}/api/mood-logs/stats${formattedStartDate ? `?startDate=${formattedStartDate}` : ''}`,
-          { credentials: 'include' }
+        const statsResponse = await api.get(
+          `/api/mood-logs/stats${formattedStartDate ? `?startDate=${formattedStartDate}` : ''}`
         );
         
-        if (!statsResponse.ok) throw new Error('Failed to fetch mood statistics');
-        const statsData = await statsResponse.json();
-        setStats(statsData.stats);
+        setStats(statsResponse.data.stats);
         
         // Fetch mood logs for the same timeframe
-        const logsResponse = await fetch(
-          `${API_URL}/api/mood-logs${formattedStartDate ? `?startDate=${formattedStartDate}` : ''}`,
-          { credentials: 'include' }
+        const logsResponse = await api.get(
+          `/api/mood-logs${formattedStartDate ? `?startDate=${formattedStartDate}` : ''}`
         );
         
-        if (!logsResponse.ok) throw new Error('Failed to fetch mood logs');
-        const logsData = await logsResponse.json();
-        setMoodLogs(logsData.moodLogs);
+        setMoodLogs(logsResponse.data.moodLogs);
         
       } catch (err) {
         console.error('Error fetching stats:', err);

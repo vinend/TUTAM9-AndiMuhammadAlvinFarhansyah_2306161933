@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { API_URL } from '../constants';
+import api from '../api/axiosConfig';
 
 const RegisterPage = ({ onLogin }) => {
   const [username, setUsername] = useState('');
@@ -29,25 +29,16 @@ const RegisterPage = ({ onLogin }) => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ username, email, password }),
+      const response = await api.post('/api/auth/register', {
+        username,
+        email,
+        password
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed');
-      }
-
+      
       // Login was successful
-      onLogin(data.user);
+      onLogin(response.data.user);
     } catch (err) {
-      setError(err.message || 'An error occurred during registration');
+      setError(err.response?.data?.message || 'An error occurred during registration');
     } finally {
       setLoading(false);
     }

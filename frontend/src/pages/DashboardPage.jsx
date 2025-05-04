@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { API_URL } from '../constants';
 import { FaPlus, FaStar, FaRegStar } from 'react-icons/fa';
+import api from '../api/axiosConfig';
 
 const DashboardPage = ({ user }) => {
   const [moods, setMoods] = useState([]);
@@ -16,28 +17,16 @@ const DashboardPage = ({ user }) => {
       
       try {
         // Fetch all available moods
-        const moodsResponse = await fetch(`${API_URL}/api/moods`, {
-          credentials: 'include',
-        });
-        
-        if (!moodsResponse.ok) throw new Error('Failed to fetch moods');
-        
-        const moodsData = await moodsResponse.json();
-        setMoods(moodsData.moods);
+        const moodsResponse = await api.get('/api/moods');
+        setMoods(moodsResponse.data.moods);
         
         // Fetch recent mood logs
-        const logsResponse = await fetch(`${API_URL}/api/mood-logs?limit=5`, {
-          credentials: 'include',
-        });
-        
-        if (!logsResponse.ok) throw new Error('Failed to fetch mood logs');
-        
-        const logsData = await logsResponse.json();
-        setRecentLogs(logsData.moodLogs);
+        const logsResponse = await api.get('/api/mood-logs?limit=5');
+        setRecentLogs(logsResponse.data.moodLogs);
         
         // Check if there's a mood logged for today
         const today = new Date().toISOString().split('T')[0];
-        const todayLog = logsData.moodLogs.find(log => 
+        const todayLog = logsResponse.data.moodLogs.find(log => 
           new Date(log.log_date).toISOString().split('T')[0] === today
         );
         
@@ -56,19 +45,9 @@ const DashboardPage = ({ user }) => {
   const toggleFavorite = async (moodLogId, isFavorite) => {
     try {
       if (isFavorite) {
-        await fetch(`${API_URL}/api/favorites/${moodLogId}`, {
-          method: 'DELETE',
-          credentials: 'include',
-        });
+        await api.delete(`/api/favorites/${moodLogId}`);
       } else {
-        await fetch(`${API_URL}/api/favorites`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ moodLogId }),
-        });
+        await api.post('/api/favorites', { moodLogId });
       }
 
       // Update the UI optimistically
